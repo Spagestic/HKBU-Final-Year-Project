@@ -366,7 +366,9 @@ The empirical results contradict the premise that standard penalized regression 
 
 ### INTERPRETATION OF FINDINGS
 
-The rigorous evaluation revealed that no classification algorithm achieved performance statistically distinguishable from random guessing. All models yielded mean Matthews Correlation Coefficients (MCC) near zero with confidence intervals spanning zero. This failure stems from three converging factors: catastrophic multicollinearity (45.3% of descriptors with VIF $> 10$), severe class imbalance (67% non-toxic), and an extreme dimensionality ratio ($p/n = 7.04$). While marginally elevated PR-AUC scores suggest weak ranking ability, this signal is insufficient for reliable binary classification, as evidenced by balanced accuracies clustering around 0.5.
+The rigorous evaluation revealed that no classification algorithm achieved performance statistically distinguishable from random guessing. All models yielded mean Matthews Correlation Coefficients (MCC) near zero with confidence intervals spanning zero. This failure stems from three converging factors: catastrophic multicollinearity (45.3% of descriptors with VIF > 10), severe class imbalance (67% non-toxic), and an extreme dimensionality ratio ($p/n \approx 7.04$). While marginally elevated PR-AUC scores suggest weak ranking ability, this signal is insufficient for reliable binary classification, as evidenced by balanced accuracies clustering around 0.5.
+
+A critical finding of this study is the prevalence of deceptive accuracy, where models achieve high accuracy scores solely by exploiting the class imbalance (67% non-toxic) rather than learning toxicity patterns. We defined deceptive models as those where Accuracy - AUC > 0.02. Analysis identified 24 out of 50 models as deceptive. For instance, the SVM-Poly-D3 model achieved a Test Accuracy of 68.6% (mirroring the majority class prevalence) but a Test AUC of only 0.333, indicating it learned to predict the majority class exclusively.
 
 ### COMPARISON TO LITERATURE
 
@@ -374,11 +376,19 @@ Our results contrast sharply with Gul et al. (2021), who reported 79.53% accurac
 
 ### LIMITATIONS
 
-Generalizability is constrained by the small sample size ($n=171$) and restriction to a single protein target (CRY1). The study relied on 2D descriptors, excluding 3D conformational or quantum chemical properties which might contain orthogonal information. Additionally, the limited sample size reduced statistical power, resulting in wide confidence intervals that prevent definitive ranking of algorithms. Finally, the focus on binary classification at a single concentration threshold may obscure more subtle structure-activity relationships visible in continuous regression tasks.
+This study is subject to several limitations that point toward specific avenues for future methodological refinement. First, generalizability is constrained by the small sample size ($n=171$) and restriction to a single protein target (CRY1). The extreme dimensionality ($p \gg n$) resulted in wide confidence intervals that prevented definitive ranking of algorithms.
+
+A significant theoretical limitation lies in our reliance on standard convex penalization methods (Lasso, Ridge, Elastic Net). While popular for feature selection, Lasso suffers from unavoidable estimation bias: to select a variable, it must shrink its coefficient, often over-penalizing large coefficients and potentially discarding true biological signals in high-noise environments. Future research should investigate non-convex penalty functions such as SCAD (Smoothly Clipped Absolute Deviation) and MCP (Minimax Concave Penalty). Unlike Lasso, these methods possess the "oracle property," effectively eliminating the bias for large coefficients while retaining the sparsity needed for interpretation. Given the "degenerate optimization landscape" identified in our VIF analysis, MCP’s "sparse convexity" may offer the stability required to identify relevant toxicity descriptors where Lasso failed.
+​
+
+Furthermore, the high dimensionality ratio suggests that simultaneous estimation and selection is statistically intractable for this dataset. Sure Independence Screening (SIS) represents a critical future step. By screening the feature space down to a manageable size ($d < n$) based on marginal correlation before modeling, SIS could theoretically preserve the probability of keeping all true predictors while stabilizing the subsequent regression step.
+​
+
+Finally, our study relied on 2D descriptors, excluding 3D conformational or quantum chemical properties which might contain orthogonal information. The focus on binary classification may also obscure subtle structure-activity relationships that could be visible in continuous regression tasks.
 
 ### IMPLICATIONS FOR PRACTICE
 
-These findings suggest three key guidelines for computational toxicology. First, nested cross-validation and prevalence-independent metrics (MCC, PR-AUC) must be standard for high-dimensional datasets ($p/n > 5$) to prevent performance overestimation. Second, VIF analysis should precede modeling; when a large fraction of features exhibit VIF $> 10$, stability selection is essential to validate feature importance. Third, the Toxicity-2 dataset represents a "data-poor" regime where algorithmic sophistication cannot overcome information deficits. Learning curve extrapolations indicate that 300–500 molecules are required for reliable prediction, suggesting that future resources should prioritize experimental data collection over further modeling of this specific dataset.
+These findings establish three practical guidelines for QSAR modeling. First, nested cross-validation and prevalence-independent metrics (MCC, PR-AUC) should be mandatory for datasets with $p \gg n$ to prevent performance overestimation. Second, VIF analysis should precede modeling to diagnose dataset readiness; when >50% of features exhibit VIF > 10, stability selection becomes essential. Third, learning curve extrapolations suggest 300-500 molecules are required for reliable CRY1 toxicity prediction, indicating that investment in experimental assays should precede further computational method development.
 
 ## CONCLUSION
 
